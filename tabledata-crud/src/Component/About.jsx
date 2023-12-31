@@ -1,22 +1,35 @@
 import { Table } from 'flowbite-react';
 import { useEffect, useState } from 'react';
 import axios from 'axios';
-
+import Swal from 'sweetalert2';
 
 const About = () => {
     const [data, setData] = useState (null)
+      const [input, setInput] = useState ({
+        name : "",
+        course : "",
+        score : "",
+      })
+      const [fetchStatus, setFetchStatus] = useState(true)
 
 
     useEffect(() => {
-        axios.get(`${import.meta.env.VITE_GETDATA}`)
+      if(fetchStatus === true){
+
+axios.get(`${import.meta.env.VITE_GETDATA}`)
         .then((res) => {
-            setData(res.data)
+            setData([...res.data])
             console.log(res.data)
+
+           
         })
         .catch((err) => {
             console.log(err)
         })
-    },[])
+ setFetchStatus(false)
+      }
+        
+    },[fetchStatus, setFetchStatus])
 
 
     const handleNilai = (score) => {
@@ -33,9 +46,85 @@ const About = () => {
         }
     }
 
+    const handleInput = (event) => {
+     
+      let name = event.target.name
+      let value = event.target.value
+
+      if ( name === "name"){
+        setInput({...input, name : value})
+      } else if ( name === "course" ) {
+        setInput({...input, course : value})
+      } else if (name === "score" && value === '' || (parseInt(value) >= 0 && parseInt(value) <= 100)) {
+        setInput({...input, score : value})
+      }
+    }
+
+    const handleSubmit = (event) => {
+      event.preventDefault()
+
+      let {name, course, score} = input
+
+      axios.post(`${import.meta.env.VITE_GETDATA}`, {name, course, score})
+      .then((res) => {
+        console.log(res)
+
+        setFetchStatus(true)
+      })
+      .catch((error) => {
+        console.log(error)
+      })
+
+      setInput({
+        name : '',
+        course : '',
+        score : ''
+      })
+    }
+
+    const handleDelete = (event) => {
+     Swal.fire({
+        title: "Are you sure?",
+        text: "You won't be able to revert this!",
+        icon: "warning",
+        showCancelButton: true,
+        confirmButtonColor: "#3085d6",
+        cancelButtonColor: "#d33",
+        confirmButtonText: "Yes, delete it!"
+      })
+      let idData = parseInt(event.target.value)
+
+     
+axios.delete(`${import.meta.env.VITE_GETDATA}/${idData}`)
+.then((result) => {
+
+        console.log(result)
+
+        if (result.isConfirmed){
+           Swal.fire({
+          title: "Deleted!",
+          text: "Your file has been deleted.",
+          icon: "success"
+        });
+        } 
+       
+        setFetchStatus(true)
+
+      })
+
+     
+      
+     
+      
+      
+    }
+
+    
+   
 
   return (
-    <div className='container m-auto mt-5'>
+    <>
+     <div className='container m-auto mt-5'>
         
        <div className="overflow-x-auto ">
         <h1 className='text-center text-2xl m-4 font-black text-amber-500'>TABLE DATA</h1>
@@ -63,7 +152,7 @@ const About = () => {
             <Table.Cell>{handleNilai(data.score)}</Table.Cell>
             <Table.Cell className='text-center'>
              <button className='bg-blue-700 hover:bg-blue-500 duration-300 p-2 m-1 rounded text-white'>Edit</button>
-             <button className='bg-red-700 hover:bg-red-500 duration-300 p-2 m-1 rounded text-white'>Delete</button>
+             <button className='bg-red-700 hover:bg-red-500 duration-300 p-2 m-1 rounded text-white' onClick={handleDelete} value={data.id}>Delete</button>
             </Table.Cell>
           </Table.Row>
                 )
@@ -74,6 +163,33 @@ const About = () => {
       </Table>
     </div>
     </div>
+
+            {/* Input Form */}
+
+<h1 className='text-[25px] text-amber-500 font-black text-center mt-[50px]'>INPUT DATA</h1>
+
+<form onSubmit={handleSubmit}>
+   <div className='w-full p-5 flex items-center justify-center'>
+    <div className='w-full h-4/5 m-5 rounded-2xl bg-slate-400 p-5'>
+      
+      <h1 className='ms-2 '>Nama</h1>
+      <input className='p-2 w-full rounded-2xl mt-2' type='text' onChange={handleInput} value={input.name} name='name'></input>
+      <h1 className='ms-2 mt-2'>Mata Kuliah</h1>
+      <input className='p-2 w-full  rounded-2xl mt-2' type='text' onChange={handleInput} value={input.course} name='course'></input>
+      <h1 className='ms-2 mt-2'>Nilai</h1>
+      <input className='p-2 w-full rounded-2xl mt-2 ' type='text' onChange={handleInput} value={input.score} name='score'></input>
+      <div>
+
+        <button type='submit'  className='bg-red-700 p-2 rounded-2xl mt-4 w-full font-bold text-white hover:bg-red-500 hover:duration-300'>SUBMIT</button>
+      
+      </div>
+     
+    </div>
+  </div>
+ </form>
+ 
+    </>
+   
   )
 }
 
