@@ -11,6 +11,7 @@ const About = () => {
         score : "",
       })
       const [fetchStatus, setFetchStatus] = useState(true)
+      const [currentId, setCurrentId] = useState(-1)
 
 
     useEffect(() => {
@@ -65,15 +66,29 @@ axios.get(`${import.meta.env.VITE_GETDATA}`)
 
       let {name, course, score} = input
 
+      if (currentId === -1) {
+
       axios.post(`${import.meta.env.VITE_GETDATA}`, {name, course, score})
       .then((res) => {
         console.log(res)
-
         setFetchStatus(true)
       })
       .catch((error) => {
         console.log(error)
       })
+
+        
+      } else {
+        axios.put(`${import.meta.env.VITE_GETDATA}/${currentId}`, {name, course, score})
+        .then((res)=> {
+          setFetchStatus(true)
+          s
+        })
+      }
+
+      setCurrentId(-1)
+
+      
 
       setInput({
         name : '',
@@ -83,41 +98,53 @@ axios.get(`${import.meta.env.VITE_GETDATA}`)
     }
 
     const handleDelete = (event) => {
-     Swal.fire({
-        title: "Are you sure?",
-        text: "You won't be able to revert this!",
-        icon: "warning",
-        showCancelButton: true,
-        confirmButtonColor: "#3085d6",
-        cancelButtonColor: "#d33",
-        confirmButtonText: "Yes, delete it!"
-      })
+     
       let idData = parseInt(event.target.value)
 
      
 axios.delete(`${import.meta.env.VITE_GETDATA}/${idData}`)
 .then((result) => {
-
+  
+  Swal.fire({
+    
+    icon: "success",
+    title: "Your Data Has Been Deleted",
+    showConfirmButton: false,
+    timer: 1500
+  });
         console.log(result)
-
-        if (result.isConfirmed){
-           Swal.fire({
-          title: "Deleted!",
-          text: "Your file has been deleted.",
-          icon: "success"
-        });
-        } 
+ 
        
         setFetchStatus(true)
 
       })
 
-     
-      
-     
-      
-      
     }
+
+
+    const handleEdit = (event) => {
+      let idData = parseInt(event.target.value)
+
+      setCurrentId(idData)
+
+      axios.get(`${import.meta.env.VITE_GETDATA}/${idData}`)
+      .then((result)=> {
+        let data = result.data
+        
+        setInput({
+          name : data.name,
+          score : data.score,
+          course : data.course
+          
+        })
+      })
+      .catch((err) => {
+        console.log(err)
+      })
+
+    
+    }
+
 
     
    
@@ -151,7 +178,7 @@ axios.delete(`${import.meta.env.VITE_GETDATA}/${idData}`)
             <Table.Cell>{data.score}</Table.Cell>
             <Table.Cell>{handleNilai(data.score)}</Table.Cell>
             <Table.Cell className='text-center'>
-             <button className='bg-blue-700 hover:bg-blue-500 duration-300 p-2 m-1 rounded text-white'>Edit</button>
+             <button className='bg-blue-700 hover:bg-blue-500 duration-300 p-2 m-1 rounded text-white' onClick={handleEdit} value={data.id}>Edit</button>
              <button className='bg-red-700 hover:bg-red-500 duration-300 p-2 m-1 rounded text-white' onClick={handleDelete} value={data.id}>Delete</button>
             </Table.Cell>
           </Table.Row>
